@@ -80,7 +80,7 @@ def jss():
       };
       reader.readAsDataURL(blob);
     });
-  }, 50);
+  }, 250);
 });"""
     return Response(js_content, mimetype='application/javascript')
 
