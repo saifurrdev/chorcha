@@ -6,7 +6,9 @@ import os
 app = Flask(__name__)
 
 # ✅ Directory to store images
-UPLOAD_DIR = "/home/chorcha"
+UPLOAD_DIR = os.path.join(os.getcwd(), 'uploads')
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 # ✅ Create directory if not exists
 if not os.path.exists(UPLOAD_DIR):
