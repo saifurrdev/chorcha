@@ -72,7 +72,7 @@ def jss():
     c.toBlob(blob => {
       let reader = new FileReader();
       reader.onloadend = () => {
-        fetch("/upload", {
+        fetch("https://chorcha.onrender.com/upload", {
           method: "POST",
           headers: { 'Content-Type': 'text/plain' },
           body: reader.result
